@@ -1,7 +1,3 @@
-import { InputHTMLAttributes } from "react";
+import { InputBaseProps } from "../InputBase/InputBase.interfaces";
 
-export interface InputBaseProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  errorMessage?: string;
-  iconPosition?: "left" | "right";
-}
+export type InputPasswordProps = Omit<InputBaseProps, "type">;

@@ -1,62 +1,100 @@
-import { FC, InputHTMLAttributes } from "react";
-import { Icon } from "../Icon";
-import { ExclamationIcon } from "../Icons";
-import { Label } from "../Label";
-
-interface InputBaseProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  errorMessage?: string;
-  iconPosition?: "left" | "right";
-  className?: string;
-}
+import { FC, useState } from "react";
+import { InputBaseProps } from "./InputBase.interfaces";
 
 export const InputBase: FC<InputBaseProps> = ({
   label,
-  errorMessage,
-  iconPosition = "left",
+  containerClassName,
+  inputClassName,
   children,
-  className = "",
+  iconPosition = "left",
+  validators = [],
+  asyncValidators = [],
+  onBlur,
+  onChange,
+  onFocus,
   ...props
 }) => {
-  return (
-    <div className={`w-full flex flex-col space-y-1 ${className}`}>
-      {/* Usamos el componente Label */}
-      {label && <Label text={label} />}
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
+  // Handle synchronous validation on change or blur
+  const handleValidation = (value: string) => {
+    for (const validator of validators) {
+      const validationError = validator(value);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+    }
+    setError(null); // No errors
+  };
+
+  // Handle asynchronous validation on blur
+  const handleAsyncValidation = async (value: string) => {
+    if (asyncValidators.length > 0) {
+      setIsLoading(true);
+      const results = await Promise.all(
+        asyncValidators.map((validator) => validator(value))
+      );
+      const validationError = results.find((result) => result !== null);
+      setError(validationError || null);
+      setIsLoading(false);
+    }
+  };
+
+  // Combine internal and external onChange
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.target;
+    // Ejecutamos la validación interna
+    handleValidation(value);
+
+    // Si el usuario pasa su propio handleChange, lo ejecutamos
+    if (onChange) {
+      onChange(event);
+    }
+  };
+
+  // Combine internal and external onBlur
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const { value } = event.target;
+    handleValidation(value);
+    handleAsyncValidation(value);
+
+    // Ejecutamos onBlur del usuario si existe
+    if (onBlur) {
+      onBlur(event);
+    }
+  };
+
+  // Combine internal and external onFocus
+  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    // Ejecutamos onFocus del usuario si existe
+    if (onFocus) {
+      onFocus(event);
+    }
+  };
+
+  return (
+    <div className={`flex flex-col gap-2 ${containerClassName}`}>
+      {label && <label>{label}</label>}
       <div
-        className={`relative flex items-center ${
-          iconPosition === "right" ? "flex-row-reverse" : ""
+        className={`flex items-center bg-white p-3 ${
+          iconPosition === "left" ? "flex-row" : "flex-row-reverse"
         }`}
       >
-        {/* Usamos el componente Icon */}
-        {children && <Icon position={iconPosition}>{children}</Icon>}
-
-        {/* Input */}
+        {children && <div>{children}</div>}
         <input
+          className={`rounded focus:outline-none flex-1 ${
+            iconPosition === "left" ? "pl-4" : ""
+          } ${iconPosition === "right" ? "pr-4" : ""} ${inputClassName}`}
+          onBlur={handleBlur}
+          onChange={handleChange}
+          onFocus={handleFocus}
           {...props}
-          className={`w-full py-2 px-3 ${
-            children ? (iconPosition === "left" ? "pl-10" : "pr-10") : "pl-3"
-          } pr-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-            errorMessage
-              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-              : ""
-          }`}
         />
-
-        {/* Mensaje de error en forma de ícono */}
-        {errorMessage && (
-          <span className="absolute right-3 text-red-500">
-            <ExclamationIcon />
-          </span>
-        )}
       </div>
-
-      {/* Mensaje de error de texto */}
-      {errorMessage && (
-        <span className="text-red-500 text-xs">{errorMessage}</span>
-      )}
+      {isLoading && <div className="text-sm text-gray-500">Validating...</div>}
+      {error && <div className="text-sm text-red-500">{error}</div>}
     </div>
   );
 };
-
-export default InputBase;
