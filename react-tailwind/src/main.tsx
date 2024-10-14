@@ -1,5 +1,7 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
+// import App from "./App.tsx";
+import { WebComponentsDemo } from "./components/WebComponentsDemo";
+import "@codescript/ui/dist/style.css";
 import "./index.css";
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(<WebComponentsDemo />);
