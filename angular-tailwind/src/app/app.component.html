@@ -1,1 +1,26 @@
-<h1 class="text-3xl font-bold underline">Hello world!</h1>
+<div class="flex justify-between items-center p-2">
+  <h1 class="text-3xl font-bold underline">Hello world from Angular!</h1>
+
+  <cs-dark-mode-toggle />
+</div>
+
+<div class="flex p-2 mb-2 gap-4">
+  <cs-button text="Button primary" color="primary" />
+
+  <cs-button text="Button secondary" color="secondary" />
+
+  <cs-button text="Button tertiary" color="tertiary" />
+</div>
+
+<cs-login />
+
+<cs-colors />
+
+<cs-typography-variants />
+
+<cs-form
+  container-class-name="max-w-md mx-auto theme-background-paper p-6 rounded-lg shadow-md my-8"
+  [fields]="formConfig.fields"
+  [layout]="formConfig.layout"
+  [submitButtonLabel]="formConfig.submitButtonLabel"
+/>
